@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import fatec.phc.api.trainingschedule.model.Training;
 import fatec.phc.api.trainingschedule.repository.ITrainingRepository;
+import jakarta.transaction.Transactional;
 
 @Service
 public class TrainingServiceImp implements ITrainingService{
@@ -58,11 +59,22 @@ public class TrainingServiceImp implements ITrainingService{
 
 	@Override
 	public Iterable<Training> findAllTrainingsForType(String type) {
-		List<Training> listOfTrainings = repository.findByType(type);
-		if(listOfTrainings.isEmpty()) {
+		List<Training> listOfTrainingsForType = repository.findByType(type);
+		if(listOfTrainingsForType.isEmpty()) {
 			throw new NullPointerException("There are no trainings of this type in the database");
 		}
-		return listOfTrainings;
+		return listOfTrainingsForType;
+	}
+
+	@Override
+	@Transactional
+	public Iterable<Training> findAllTrainings() {
+		
+		List<Training> listAllTrainings = repository.fetchAllTrainings();
+		if(listAllTrainings.isEmpty()) {
+			throw new NullPointerException("There are no trainings in the database");
+		}
+		return listAllTrainings;
 	}
 
 	

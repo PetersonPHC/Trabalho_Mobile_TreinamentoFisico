@@ -48,8 +48,14 @@ public class TrainingController {
 	
 	@GetMapping("/type/{type}")
 	public ResponseEntity<Iterable<Training>> getTrainingForType(@PathVariable String type){
-		Iterable<Training> training = service.findAllTrainingsForType(type);
-		return ResponseEntity.status(HttpStatus.OK).body(training);
+		Iterable<Training> trainingsForType = service.findAllTrainingsForType(type);
+		return ResponseEntity.status(HttpStatus.OK).body(trainingsForType);
+	}
+	
+	@GetMapping()
+	public ResponseEntity<Iterable<Training>> getTrainingAllTrainingsWithStoredProocedure(){
+		Iterable<Training> allTrainings = service.findAllTrainings();
+		return ResponseEntity.status(HttpStatus.OK).body(allTrainings);
 	}
 	
 
