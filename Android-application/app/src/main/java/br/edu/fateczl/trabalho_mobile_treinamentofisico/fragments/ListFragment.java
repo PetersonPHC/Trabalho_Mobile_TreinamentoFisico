@@ -53,9 +53,9 @@ public class ListFragment extends Fragment {
         String url = "";
 
         if (rbList01.isChecked()) {
-            url = "https://seu-api-url/gym";
+            url = "http://192.168.1.7:8080/gym";
         } else if (rbList02.isChecked()) {
-            url = "https://seu-api-url/home";
+            url = "http://192.168.1.7:8080/home";
         } else {
             Toast.makeText(view.getContext(), "Selecione o tipo de treino.", Toast.LENGTH_SHORT).show();
             return;

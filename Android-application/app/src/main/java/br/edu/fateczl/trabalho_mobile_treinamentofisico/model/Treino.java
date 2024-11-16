@@ -1,7 +1,6 @@
 package br.edu.fateczl.trabalho_mobile_treinamentofisico.model;
 
 import java.time.LocalDate;
-import java.util.List;
 
 public class Treino {
 
@@ -10,7 +9,7 @@ public class Treino {
 
     private String type;
 
-    private LocalDate date;
+    private String date;
 
     private String muscularGroup;
 
@@ -40,12 +39,12 @@ public class Treino {
     }
 
 
-    public LocalDate getDate() {
+    public String getDate() {
         return date;
     }
 
 
-    public void setDate(LocalDate date) {
+    public void setDate(String date) {
         this.date = date;
     }
 

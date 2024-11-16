@@ -24,7 +24,7 @@ public class TreinoCasaFragment extends Fragment {
     private EditText etDateTC, etMuscTC, etExTC, etTimeTC;
     private Button btRegTC, btUpTC;
 
-    private static final String BASE_URL = "http://192.168.1.5:8080/api/home/";
+    private static final String BASE_URL = "http://192.168.72.240:8080/api/trainings";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -115,7 +115,7 @@ public class TreinoCasaFragment extends Fragment {
 
     private Treino create() {
         Treino ta = new Treino();
-        ta.setDate(LocalDate.parse(etDateTC.getText().toString()));
+        ta.setDate((etDateTC.getText().toString()));
         ta.setMuscularGroup(etMuscTC.getText().toString());
         ta.setExercises(etExTC.getText().toString());
         ta.setDuration(60);

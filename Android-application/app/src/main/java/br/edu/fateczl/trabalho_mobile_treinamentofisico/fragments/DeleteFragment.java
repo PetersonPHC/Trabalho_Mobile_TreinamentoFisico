@@ -56,9 +56,9 @@ public class DeleteFragment extends Fragment {
 
         String url = "";
         if (rb01Del.isChecked()) {
-            url = "https://seu-api-url/gym/";
+            url = "http://192.168.1.7:8080/gym/";
         } else if (rb02Del.isChecked()) {
-            url = "https://seu-api-url/home/";
+            url = "http://192.168.1.7:8080/home/";
         } else {
             Toast.makeText(view.getContext(), "Selecione o tipo de treino.", Toast.LENGTH_SHORT).show();
             return;

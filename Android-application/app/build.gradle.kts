@@ -34,7 +34,8 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
-    implementation(libs.gson)
+    implementation (libs.gson)
+
     implementation(libs.okhttp)
     implementation(libs.protolite.well.known.types)
     testImplementation(libs.junit)
