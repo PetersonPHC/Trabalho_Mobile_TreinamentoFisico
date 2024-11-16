@@ -16,7 +16,7 @@ import fatec.phc.api.trainingschedule.model.Training;
 import fatec.phc.api.trainingschedule.service.ITrainingService;
 
 @RestController
-@RequestMapping("/trainings")
+@RequestMapping("/api/trainings")
 public class TrainingController {
 	
 	@Autowired

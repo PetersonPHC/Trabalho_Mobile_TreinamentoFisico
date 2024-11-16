@@ -24,6 +24,8 @@ public class Training {
 	private LocalDate date;
 	@NotBlank
 	private String muscularGroup;
+	@NotBlank
+	private String exercises;
 	
 	private int duration;
 	
@@ -66,6 +68,15 @@ public class Training {
 
 	public void setMuscularGroup(String muscularGroup) {
 		this.muscularGroup = muscularGroup;
+	}
+
+	public String getExercises() {
+		return exercises;
+	}
+	
+	
+	public void setExercises(String exercises) {
+		this.exercises = exercises;
 	}
 
 

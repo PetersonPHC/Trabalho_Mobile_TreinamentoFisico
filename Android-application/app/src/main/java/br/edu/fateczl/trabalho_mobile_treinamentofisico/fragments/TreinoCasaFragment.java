@@ -1,7 +1,9 @@
-package br.edu.fateczl.trabalho_mobile_treinamentofisico;
+package br.edu.fateczl.trabalho_mobile_treinamentofisico.fragments;
 
 import android.os.Bundle;
+
 import androidx.fragment.app.Fragment;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,40 +14,40 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.time.LocalDate;
 
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.R;
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.model.Treino;
 import okhttp3.*;
 
-import model.TreinoAcademia;
-
-
-public class TreinoAcademiaFragment extends Fragment {
+public class TreinoCasaFragment extends Fragment {
 
     private View view;
-    private EditText etDateTA, etMuscTA, etLocalTA, etExTA;
-    private Button btRegTA, btUpTA;
-    private static final String BASE_URL = "http://192.168.1.7:8080/api/gym/";
+    private EditText etDateTC, etMuscTC, etExTC, etTimeTC;
+    private Button btRegTC, btUpTC;
+
+    private static final String BASE_URL = "http://192.168.1.5:8080/api/home/";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_treino_academia, container, false);
+        view = inflater.inflate(R.layout.fragment_treino_casa, container, false);
 
-        etDateTA = view.findViewById(R.id.etDateTA);
-        etMuscTA = view.findViewById(R.id.etMuscTA);
-        etLocalTA = view.findViewById(R.id.etLocalTA);
-        etExTA = view.findViewById(R.id.etExTA);
-        btRegTA = view.findViewById(R.id.btRegTA);
-        btUpTA = view.findViewById(R.id.btUpTA);
+        etDateTC = view.findViewById(R.id.etDateTC);
+        etMuscTC = view.findViewById(R.id.etMuscTC);
+        etExTC = view.findViewById(R.id.etExTC);
+        etTimeTC = view.findViewById(R.id.etTimeTC);
+        btRegTC = view.findViewById(R.id.btRegTC);
+        btUpTC = view.findViewById(R.id.btUpTC);
 
-        btRegTA.setOnClickListener(op -> register());
-        btUpTA.setOnClickListener(op -> update());
+        btRegTC.setOnClickListener(op -> register());
+        btUpTC.setOnClickListener(op -> update());
 
         return view;
     }
 
     private void register() {
         if (validateFields()) {
-            TreinoAcademia ta = create();
-            sendRequest("POST", ta, false);
+            Treino tc = create();
+            sendRequest("POST", tc, false);
         } else {
             Toast.makeText(view.getContext(), "Preencha todos os campos.", Toast.LENGTH_SHORT).show();
         }
@@ -53,14 +55,15 @@ public class TreinoAcademiaFragment extends Fragment {
 
     private void update() {
         if (validateFields()) {
-            TreinoAcademia ta = create();
-            sendRequest("PUT", ta, true);
+            Treino tc = create();
+            sendRequest("PUT", tc, true);
         } else {
             Toast.makeText(view.getContext(), "Preencha todos os campos.", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void sendRequest(String method, TreinoAcademia treino, boolean isUpdate) {
+
+    private void sendRequest(String method, Treino treino, boolean isUpdate) {
         OkHttpClient client = new OkHttpClient();
 
         MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
@@ -68,6 +71,7 @@ public class TreinoAcademiaFragment extends Fragment {
 
         RequestBody body = RequestBody.create(mediaType, jsonBody);
         Request request;
+
         if (method.equals("POST")) {
             request = new Request.Builder()
                     .url(BASE_URL)
@@ -104,34 +108,31 @@ public class TreinoAcademiaFragment extends Fragment {
             }
         });
     }
-
-    private String treinoToJson(TreinoAcademia treino) {
-        return String.format("{\"date\":\"%s\",\"muscularGroup\":\"%s\",\"exercises\":\"%s\",\"academia\":\"%s\"}",
-                treino.getDate(), treino.getMuscularGroup(), treino.getExercises(), treino.getAcademia());
+    private String treinoToJson(Treino treino) {
+        return String.format("{\"type\":\"Home\", \"date\":\"%s\", \"muscularGroup\":\"%s\", \"exercises\":\"%s\", \"time\":%d}",
+                treino.getDate(), treino.getMuscularGroup(), treino.getExercises(), treino.getDuration());
     }
 
-    private TreinoAcademia create() {
-        TreinoAcademia ta = new TreinoAcademia();
-        // Simulating ID generation if needed (or use UUID/random value).
-        ta.setId((int) (Math.random() * 1000));
-        ta.setDate(LocalDate.parse(etDateTA.getText().toString()));
-        ta.setMuscularGroup(etMuscTA.getText().toString());
-        ta.setExercises(etExTA.getText().toString());
-        ta.setAcademia(etLocalTA.getText().toString());
+    private Treino create() {
+        Treino ta = new Treino();
+        ta.setDate(LocalDate.parse(etDateTC.getText().toString()));
+        ta.setMuscularGroup(etMuscTC.getText().toString());
+        ta.setExercises(etExTC.getText().toString());
+        ta.setDuration(60);
         return ta;
     }
 
     private void clearFields() {
-        etDateTA.setText("");
-        etMuscTA.setText("");
-        etLocalTA.setText("");
-        etExTA.setText("");
+        etDateTC.setText("");
+        etMuscTC.setText("");
+        etExTC.setText("");
+        etTimeTC.setText("");
     }
 
     private boolean validateFields() {
-        return !etDateTA.getText().toString().isEmpty() &&
-                !etMuscTA.getText().toString().isEmpty() &&
-                !etLocalTA.getText().toString().isEmpty() &&
-                !etExTA.getText().toString().isEmpty();
+        return !etDateTC.getText().toString().isEmpty() &&
+                !etMuscTC.getText().toString().isEmpty() &&
+                !etExTC.getText().toString().isEmpty() &&
+                !etTimeTC.getText().toString().isEmpty();
     }
 }

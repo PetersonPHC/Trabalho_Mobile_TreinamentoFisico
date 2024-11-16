@@ -1,4 +1,4 @@
-package br.edu.fateczl.trabalho_mobile_treinamentofisico;
+package br.edu.fateczl.trabalho_mobile_treinamentofisico.fragments;
 
 import android.os.Bundle;
 
@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.json.JSONObject;
 
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.R;
 import br.edu.fateczl.trabalho_mobile_treinamentofisico.http.HttpHelper;
 public class SearchFragment extends Fragment {
 

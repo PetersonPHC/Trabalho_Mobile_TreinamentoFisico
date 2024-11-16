@@ -1,5 +1,6 @@
-package br.edu.fateczl.trabalho_mobile_treinamentofisico;
+package br.edu.fateczl.trabalho_mobile_treinamentofisico.fragments;
 
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.R;
 import br.edu.fateczl.trabalho_mobile_treinamentofisico.http.HttpHelper;
 
 import android.os.Bundle;
