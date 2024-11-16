@@ -40,7 +40,6 @@ public class TrainingServiceImp implements ITrainingService{
 		Training updateTraining = oldTraining.get();
 		
 		updateTraining.setType(newTraining.getType());
-		updateTraining.setDate(newTraining.getDate());
 		updateTraining.setMuscularGroup(newTraining.getMuscularGroup());
 		updateTraining.setExercises(newTraining.getExercises());
 		updateTraining.setDuration(newTraining.getDuration());

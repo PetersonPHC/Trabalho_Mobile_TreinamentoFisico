@@ -36,9 +36,15 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation (libs.gson)
 
+    //Teste do Amós
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0") // Para JSON (opcional, dependendo da API)
+
     implementation(libs.okhttp)
     implementation(libs.protolite.well.known.types)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+
 }

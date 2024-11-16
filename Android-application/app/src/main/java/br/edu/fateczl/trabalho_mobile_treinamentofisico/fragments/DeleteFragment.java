@@ -1,47 +1,37 @@
 package br.edu.fateczl.trabalho_mobile_treinamentofisico.fragments;
 
 import android.os.Bundle;
-
 import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.Toast;
 
-
-
-import java.util.concurrent.CompletableFuture;
-
 import br.edu.fateczl.trabalho_mobile_treinamentofisico.R;
-import br.edu.fateczl.trabalho_mobile_treinamentofisico.http.HttpHelper;
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.http.ApiService;
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.http.RetrofitClient;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DeleteFragment extends Fragment {
 
     private View view;
     private EditText etDateDL;
-    private EditText etMuscDL;
     private Button btDelete;
-    private RadioButton rb01Del;
-    private RadioButton rb02Del;
 
     public DeleteFragment() {
         super();
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_delete, container, false);
 
         etDateDL = view.findViewById(R.id.etDateDL);
-        etMuscDL = view.findViewById(R.id.etMuscDL);
         btDelete = view.findViewById(R.id.btDelete);
-        rb01Del = view.findViewById(R.id.rB01Del);
-        rb02Del = view.findViewById(R.id.rb02Del);
 
         btDelete.setOnClickListener(op -> delete());
 
@@ -49,36 +39,34 @@ public class DeleteFragment extends Fragment {
     }
 
     private void delete() {
-        if (etDateDL.getText().toString().isEmpty() || etMuscDL.getText().toString().isEmpty()) {
+        String date = etDateDL.getText().toString().trim();
+        if (date.isEmpty()) {
             Toast.makeText(view.getContext(), "Preencha todos os campos.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String url = "";
-        if (rb01Del.isChecked()) {
-            url = "http://192.168.1.7:8080/gym/";
-        } else if (rb02Del.isChecked()) {
-            url = "http://192.168.1.7:8080/home/";
-        } else {
-            Toast.makeText(view.getContext(), "Selecione o tipo de treino.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
+        Call<Void> call = apiService.deleteTraining(date);
 
-        url += etDateDL.getText().toString();
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(view.getContext(), "Treino removido com sucesso.", Toast.LENGTH_SHORT).show();
+                    clearFields();
+                } else {
+                    Toast.makeText(view.getContext(), "Erro: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
 
-        String finalUrl = url;
-        CompletableFuture.runAsync(() -> {
-            try {
-                HttpHelper.delete(finalUrl);
-                requireActivity().runOnUiThread(() ->
-                        Toast.makeText(view.getContext(), "Treino removido com sucesso.", Toast.LENGTH_SHORT).show()
-                );
-            } catch (Exception e) {
-                requireActivity().runOnUiThread(() ->
-                        Toast.makeText(view.getContext(), "Erro: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                );
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(view.getContext(), "Erro: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
+    private void clearFields() {
+        etDateDL.setText("");
+    }
 }

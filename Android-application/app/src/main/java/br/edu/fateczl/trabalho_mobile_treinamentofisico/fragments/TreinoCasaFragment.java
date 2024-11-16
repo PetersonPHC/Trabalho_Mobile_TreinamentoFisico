@@ -1,18 +1,23 @@
 package br.edu.fateczl.trabalho_mobile_treinamentofisico.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.time.LocalDate;
 
 import br.edu.fateczl.trabalho_mobile_treinamentofisico.R;
 import br.edu.fateczl.trabalho_mobile_treinamentofisico.model.Treino;
@@ -24,7 +29,7 @@ public class TreinoCasaFragment extends Fragment {
     private EditText etDateTC, etMuscTC, etExTC, etTimeTC;
     private Button btRegTC, btUpTC;
 
-    private static final String BASE_URL = "http://192.168.72.240:8080/api/trainings";
+    private static final String BASE_URL = "http://192.168.15.85:8080/api/trainings";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -47,6 +52,11 @@ public class TreinoCasaFragment extends Fragment {
     private void register() {
         if (validateFields()) {
             Treino tc = create();
+            String json = treinoToJson(tc);
+
+            Log.d("JSONFormatado", json);
+            System.out.println(json);
+
             sendRequest("POST", tc, false);
         } else {
             Toast.makeText(view.getContext(), "Preencha todos os campos.", Toast.LENGTH_SHORT).show();
@@ -62,24 +72,28 @@ public class TreinoCasaFragment extends Fragment {
         }
     }
 
-
     private void sendRequest(String method, Treino treino, boolean isUpdate) {
         OkHttpClient client = new OkHttpClient();
 
+        // Esconda o teclado antes de iniciar a requisição
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null && getView() != null) {
+            imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
+        }
+
         MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
         String jsonBody = treinoToJson(treino);
-
         RequestBody body = RequestBody.create(mediaType, jsonBody);
-        Request request;
 
+        Request request;
         if (method.equals("POST")) {
             request = new Request.Builder()
                     .url(BASE_URL)
                     .post(body)
                     .build();
-        } else { // PUT
+        } else {
             request = new Request.Builder()
-                    .url(BASE_URL + treino.getId()) // Assumindo que o ID é necessário no URL para PUT
+                    .url(BASE_URL + "/" + treino.getDate())
                     .put(body)
                     .build();
         }
@@ -87,39 +101,55 @@ public class TreinoCasaFragment extends Fragment {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                getActivity().runOnUiThread(() ->
-                        Toast.makeText(view.getContext(), "Erro na requisição: " + e.getMessage(), Toast.LENGTH_LONG).show()
-                );
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() ->
+                            Toast.makeText(getContext(), "Erro na requisição: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                    );
+                }
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                getActivity().runOnUiThread(() -> {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(view.getContext(),
-                                method.equals("POST") ? "Treino salvo com sucesso." : "Treino atualizado com sucesso.",
-                                Toast.LENGTH_LONG
-                        ).show();
-                        clearFields();
-                    } else {
-                        Toast.makeText(view.getContext(), "Erro: " + response.message(), Toast.LENGTH_LONG).show();
+                try (ResponseBody responseBody = response.body()) {
+                    String responseText = responseBody != null ? responseBody.string() : "Resposta vazia";
+                    Log.d("ServerResponse", "Código de resposta: " + response.code());
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        getActivity().runOnUiThread(() -> {
+                            if (response.isSuccessful()) {
+                                Toast.makeText(getContext(),
+                                        method.equals("POST") ? "Treino salvo com sucesso." : "Treino atualizado com sucesso.",
+                                        Toast.LENGTH_LONG
+                                ).show();
+                                clearFields();
+                            } else {
+                                Toast.makeText(getContext(),
+                                        "Erro: Código " + response.code() + " - " + responseText,
+                                        Toast.LENGTH_LONG
+                                ).show();
+                            }
+                        });
                     }
-                });
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    System.out.println(e.getStackTrace());
+                }
             }
         });
     }
+
     private String treinoToJson(Treino treino) {
-        return String.format("{\"type\":\"Home\", \"date\":\"%s\", \"muscularGroup\":\"%s\", \"exercises\":\"%s\", \"time\":%d}",
-                treino.getDate(), treino.getMuscularGroup(), treino.getExercises(), treino.getDuration());
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(treino);
     }
 
     private Treino create() {
-        Treino ta = new Treino();
-        ta.setDate((etDateTC.getText().toString()));
-        ta.setMuscularGroup(etMuscTC.getText().toString());
-        ta.setExercises(etExTC.getText().toString());
-        ta.setDuration(60);
-        return ta;
+        Treino tc = new Treino();
+        tc.setType("Home");
+        tc.setDate(etDateTC.getText().toString());
+        tc.setMuscularGroup(etMuscTC.getText().toString());
+        tc.setExercises(etExTC.getText().toString());
+        tc.setDuration(Integer.parseInt(etTimeTC.getText().toString()));
+        return tc;
     }
 
     private void clearFields() {

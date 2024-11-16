@@ -32,7 +32,7 @@ public class TreinoAcademiaFragment extends Fragment {
     private View view;
     private EditText etDateTA, etMuscTA, etLocalTA, etExTA;
     private Button btRegTA, btUpTA;
-    private static final String BASE_URL = "http://192.168.72.240:8080/api/trainings";
+    private static final String BASE_URL = "http://192.168.15.85:8080/api/trainings";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -96,7 +96,7 @@ public class TreinoAcademiaFragment extends Fragment {
                     .build();
         } else {
             request = new Request.Builder()
-                    .url(BASE_URL + "/" + treino.getId())
+                    .url(BASE_URL + "/" + treino.getDate())
                     .put(body)
                     .build();
         }

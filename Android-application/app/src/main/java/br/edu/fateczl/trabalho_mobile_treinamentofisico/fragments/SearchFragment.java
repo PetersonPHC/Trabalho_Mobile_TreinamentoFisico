@@ -9,39 +9,38 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.concurrent.CompletableFuture;
-
 import org.json.JSONObject;
 
+import java.util.Map;
+
 import br.edu.fateczl.trabalho_mobile_treinamentofisico.R;
-import br.edu.fateczl.trabalho_mobile_treinamentofisico.http.HttpHelper;
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.http.ApiService;
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.http.RetrofitClient;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class SearchFragment extends Fragment {
 
     private View view;
     private EditText etDateSC;
     private Button btSearch;
     private TextView tvResSC;
-    private RadioButton rb01Search;
-    private RadioButton rb02Search;
 
     public SearchFragment() {
         super();
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_search, container, false);
 
         etDateSC = view.findViewById(R.id.etDateSC);
         btSearch = view.findViewById(R.id.btSearch);
         tvResSC = view.findViewById(R.id.tvResSC);
-        rb01Search = view.findViewById(R.id.rb01Search);
-        rb02Search = view.findViewById(R.id.rb02Search);
 
         btSearch.setOnClickListener(op -> search());
 
@@ -49,38 +48,44 @@ public class SearchFragment extends Fragment {
     }
 
     private void search() {
-        if (etDateSC.getText().toString().isEmpty()) {
+        String date = etDateSC.getText().toString().trim();
+        if (date.isEmpty()) {
             Toast.makeText(view.getContext(), "Insira a data do treino.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String url = "";
-        if (rb01Search.isChecked()) {
-            url = "http://192.168.1.7:8080/gym";
-        } else if (rb02Search.isChecked()) {
-            url = "http://192.168.1.7:8080/home/";
-        } else {
-            Toast.makeText(view.getContext(), "Selecione o tipo de treino.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
+        Call<Map<String, Object>> call = apiService.getTraining(date);
 
-        url += etDateSC.getText().toString();
+        call.enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Formata os dados retornados
+                    Map<String, Object> responseData = response.body();
+                    if (!responseData.isEmpty()) {
+                        StringBuilder formattedData = new StringBuilder();
+                        for (Map.Entry<String, Object> entry : responseData.entrySet()) {
+                            formattedData.append(entry.getKey())
+                                    .append(": ")
+                                    .append(entry.getValue())
+                                    .append("\n");
+                        }
+                        tvResSC.setText(formattedData.toString());
+                    } else {
+                        tvResSC.setText("Nenhum dado encontrado para a data informada.");
+                    }
+                } else {
+                    Toast.makeText(view.getContext(), "Treino não encontrado. Código: " + response.code(), Toast.LENGTH_SHORT).show();
+                    tvResSC.setText("");
+                }
+            }
 
-        String finalUrl = url;
-        CompletableFuture.runAsync(() -> {
-            try {
-                String response = HttpHelper.get(finalUrl);
-                JSONObject treino = new JSONObject(response);
-
-                requireActivity().runOnUiThread(() ->
-                        tvResSC.setText(treino.toString())
-                );
-            } catch (Exception e) {
-                requireActivity().runOnUiThread(() ->
-                        Toast.makeText(view.getContext(), "Erro: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                );
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                Toast.makeText(view.getContext(), "Erro: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                tvResSC.setText("");
             }
         });
     }
-
 }
