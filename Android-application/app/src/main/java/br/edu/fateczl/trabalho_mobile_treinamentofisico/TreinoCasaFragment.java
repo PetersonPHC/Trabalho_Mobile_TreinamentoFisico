@@ -11,27 +11,19 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.sql.SQLException;
+import java.io.IOException;
+import java.time.LocalDate;
 
-import controller.TreinoCasaController;
+import okhttp3.*;
 import model.TreinoCasa;
-import persistance.TreinoCasaDAO;
 
 public class TreinoCasaFragment extends Fragment {
 
-    public TreinoCasaFragment() {
-        super();
-    }
-
     private View view;
-    private EditText etDateTC;
-    private EditText etMuscTC;
-    private EditText etExTC;
-    private EditText etTimeTC;
-    private Button btRegTC;
-    private Button btUpTC;
+    private EditText etDateTC, etMuscTC, etExTC, etTimeTC;
+    private Button btRegTC, btUpTC;
 
-    private TreinoCasaController TCC;
+    private static final String BASE_URL = "http://192.168.1.5:8080/api/home/";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -45,73 +37,103 @@ public class TreinoCasaFragment extends Fragment {
         btRegTC = view.findViewById(R.id.btRegTC);
         btUpTC = view.findViewById(R.id.btUpTC);
 
-        TCC = new TreinoCasaController(new TreinoCasaDAO(this.getContext()));
-
-
         btRegTC.setOnClickListener(op -> register());
         btUpTC.setOnClickListener(op -> update());
 
         return view;
     }
 
-    private void update() {
-        boolean teste = testFields();
-        if(teste){
+    private void register() {
+        if (validateFields()) {
             TreinoCasa tc = create();
-            try {
-                TCC.update(tc);
-                Toast.makeText(view.getContext(), "Treino atualizado com sucesso", Toast.LENGTH_LONG).show();
-            } catch (SQLException e) {
-                Toast.makeText(view.getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-            }
-            clearFields();
-        }else{
-            Toast.makeText(view.getContext(), "Preencha todos os campos antes de continuar.", Toast.LENGTH_SHORT).show();
+            sendRequest("POST", tc, false);
+        } else {
+            Toast.makeText(view.getContext(), "Preencha todos os campos.", Toast.LENGTH_SHORT).show();
         }
     }
-    private void register() {
-        boolean teste = testFields();
-        if(teste == true){
-            TreinoCasa ta = create();
-            try {
-                TCC.insert(ta);
-                Toast.makeText(view.getContext(), "Treino salvo com sucesso", Toast.LENGTH_LONG).show();
-            } catch (SQLException e) {
-                Toast.makeText(view.getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-            }
-            clearFields();
-        }else{
-            Toast.makeText(view.getContext(), "Preencha todos os campos antes de continuar.", Toast.LENGTH_SHORT).show();
+
+    private void update() {
+        if (validateFields()) {
+            TreinoCasa tc = create();
+            sendRequest("PUT", tc, true);
+        } else {
+            Toast.makeText(view.getContext(), "Preencha todos os campos.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+
+    private void sendRequest(String method, TreinoCasa treino, boolean isUpdate) {
+        OkHttpClient client = new OkHttpClient();
+
+        MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
+        String jsonBody = treinoToJson(treino);
+
+        RequestBody body = RequestBody.create(mediaType, jsonBody);
+        Request request;
+
+        if (method.equals("POST")) {
+            request = new Request.Builder()
+                    .url(BASE_URL)
+                    .post(body)
+                    .build();
+        } else { // PUT
+            request = new Request.Builder()
+                    .url(BASE_URL + treino.getId()) // Assumindo que o ID é necessário no URL para PUT
+                    .put(body)
+                    .build();
+        }
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                getActivity().runOnUiThread(() ->
+                        Toast.makeText(view.getContext(), "Erro na requisição: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                );
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                getActivity().runOnUiThread(() -> {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(view.getContext(),
+                                method.equals("POST") ? "Treino salvo com sucesso." : "Treino atualizado com sucesso.",
+                                Toast.LENGTH_LONG
+                        ).show();
+                        clearFields();
+                    } else {
+                        Toast.makeText(view.getContext(), "Erro: " + response.message(), Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        });
+    }
+    private String treinoToJson(TreinoCasa treino) {
+        return String.format("{\"date\":\"%s\",\"muscularGroup\":\"%s\",\"exercises\":\"%s\",\"time\":%d}",
+                treino.getDate(), treino.getMuscularGroup(), treino.getExercises(), treino.getTime());
     }
 
     private TreinoCasa create() {
         TreinoCasa tc = new TreinoCasa();
-
-        tc.setId(TCC.createId(etDateTC.getText().toString()));
-        tc.setDate(TCC.createDate(etDateTC.getText().toString()));
+        // Simulating ID generation if needed (or use UUID/random value).
+        tc.setId((int) (Math.random() * 1000));
+        tc.setDate(LocalDate.parse(etDateTC.getText().toString()));
         tc.setMuscularGroup(etMuscTC.getText().toString());
         tc.setExercises(etExTC.getText().toString());
         tc.setTime(Integer.parseInt(etTimeTC.getText().toString()));
-
         return tc;
     }
 
-    private boolean testFields() {
-        if(!(etDateTC.getText().toString().isEmpty()) &&
-                !(etMuscTC.getText().toString().isEmpty()) &&
-                !(etExTC.getText().toString().isEmpty()) &&
-                !(etTimeTC.getText().toString().isEmpty())){
-            return true;
-        }else{
-            return false;
-        }
-    }
-
-    private void clearFields(){
+    private void clearFields() {
         etDateTC.setText("");
         etMuscTC.setText("");
         etExTC.setText("");
         etTimeTC.setText("");
+    }
+
+    private boolean validateFields() {
+        return !etDateTC.getText().toString().isEmpty() &&
+                !etMuscTC.getText().toString().isEmpty() &&
+                !etExTC.getText().toString().isEmpty() &&
+                !etTimeTC.getText().toString().isEmpty();
     }
 }

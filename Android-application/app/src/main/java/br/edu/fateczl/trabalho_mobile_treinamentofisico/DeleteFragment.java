@@ -12,14 +12,11 @@ import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.Toast;
 
-import java.sql.SQLException;
 
-import controller.TreinoAcademiaController;
-import controller.TreinoCasaController;
-import model.TreinoAcademia;
-import model.TreinoCasa;
-import persistance.TreinoAcademiaDAO;
-import persistance.TreinoCasaDAO;
+
+import java.util.concurrent.CompletableFuture;
+
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.http.HttpHelper;
 
 public class DeleteFragment extends Fragment {
 
@@ -29,8 +26,6 @@ public class DeleteFragment extends Fragment {
     private Button btDelete;
     private RadioButton rb01Del;
     private RadioButton rb02Del;
-    private TreinoAcademiaController TAC;
-    private TreinoCasaController TCC;
 
     public DeleteFragment() {
         super();
@@ -39,7 +34,6 @@ public class DeleteFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         view = inflater.inflate(R.layout.fragment_delete, container, false);
 
         etDateDL = view.findViewById(R.id.etDateDL);
@@ -48,79 +42,42 @@ public class DeleteFragment extends Fragment {
         rb01Del = view.findViewById(R.id.rB01Del);
         rb02Del = view.findViewById(R.id.rb02Del);
 
-        btDelete.setOnClickListener( op -> delete());
+        btDelete.setOnClickListener(op -> delete());
 
         return view;
     }
 
-    private boolean testFields() {
-        boolean teste = etDateDL.getText().toString().isEmpty() ||
-                etMuscDL.getText().toString().isEmpty();
-
-        return !teste;
-    }
-
     private void delete() {
-        boolean teste = testFields();
-        if(teste == true){
-            if(rb01Del.isChecked()){
-                TreinoAcademia ta = createTA();
-                TAC = new TreinoAcademiaController(new TreinoAcademiaDAO(this.getContext()));
-                try {
-                    TAC.delete(ta);
-                    Toast.makeText(view.getContext(), "Treino Removido Com Sucesso", Toast.LENGTH_SHORT).show();
-                } catch (SQLException e) {
-                    Toast.makeText(view.getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            }else if (rb02Del.isChecked()){
-                TreinoCasa tc = createTC();
-                TCC = new TreinoCasaController(new TreinoCasaDAO(this.getContext()));
-                try {
-                    TCC.delete(tc);
-                    Toast.makeText(view.getContext(), "Treino Removido Com Sucesso", Toast.LENGTH_SHORT).show();
-                } catch (SQLException e) {
-                    Toast.makeText(view.getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            }else{
-                Toast.makeText(view.getContext(), "Selecione o tipo de treino", Toast.LENGTH_SHORT).show();
-            }
-        }else{
-            Toast.makeText(view.getContext(), "Preencha todos os campos", Toast.LENGTH_SHORT).show();
+        if (etDateDL.getText().toString().isEmpty() || etMuscDL.getText().toString().isEmpty()) {
+            Toast.makeText(view.getContext(), "Preencha todos os campos.", Toast.LENGTH_SHORT).show();
+            return;
         }
-    }
 
-    private int createID() {
-        String date = etDateDL.getText().toString();
-        String split[] = date.split("");
-        String Year = "";
-        String Month = "";
-        String Day = "";
-        for (int i = 0; i < split.length; i++) {
-            if (i < 4) {
-                Year += split[i];
-            } else {
-                if (i < 6) {
-                    Month += split[i];
-                } else {
-                    Day += split[i];
-                }
-            }
+        String url = "";
+        if (rb01Del.isChecked()) {
+            url = "https://seu-api-url/gym/";
+        } else if (rb02Del.isChecked()) {
+            url = "https://seu-api-url/home/";
+        } else {
+            Toast.makeText(view.getContext(), "Selecione o tipo de treino.", Toast.LENGTH_SHORT).show();
+            return;
         }
-        date = Year + Month + Day;
-        return Integer.parseInt(date);
+
+        url += etDateDL.getText().toString();
+
+        String finalUrl = url;
+        CompletableFuture.runAsync(() -> {
+            try {
+                HttpHelper.delete(finalUrl);
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(view.getContext(), "Treino removido com sucesso.", Toast.LENGTH_SHORT).show()
+                );
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(view.getContext(), "Erro: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+            }
+        });
     }
 
-    private TreinoCasa createTC() {
-        TreinoCasa tc = new TreinoCasa();
-        tc.setId(createID());
-        tc.setMuscularGroup(etMuscDL.getText().toString());
-        return tc;
-    }
-
-    private TreinoAcademia createTA() {
-        TreinoAcademia ta = new TreinoAcademia();
-        ta.setId(createID());
-        ta.setMuscularGroup(etMuscDL.getText().toString());
-        return ta;
-    }
 }

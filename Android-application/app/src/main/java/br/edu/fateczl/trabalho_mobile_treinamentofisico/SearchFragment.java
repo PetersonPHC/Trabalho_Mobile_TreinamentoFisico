@@ -13,15 +13,11 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.sql.SQLException;
+import java.util.concurrent.CompletableFuture;
 
-import controller.TreinoAcademiaController;
-import controller.TreinoCasaController;
-import model.TreinoAcademia;
-import model.TreinoCasa;
-import persistance.TreinoAcademiaDAO;
-import persistance.TreinoCasaDAO;
+import org.json.JSONObject;
 
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.http.HttpHelper;
 public class SearchFragment extends Fragment {
 
     private View view;
@@ -30,8 +26,6 @@ public class SearchFragment extends Fragment {
     private TextView tvResSC;
     private RadioButton rb01Search;
     private RadioButton rb02Search;
-    private TreinoAcademiaController TAC;
-    private TreinoCasaController TCC;
 
     public SearchFragment() {
         super();
@@ -40,7 +34,6 @@ public class SearchFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         view = inflater.inflate(R.layout.fragment_search, container, false);
 
         etDateSC = view.findViewById(R.id.etDateSC);
@@ -49,47 +42,44 @@ public class SearchFragment extends Fragment {
         rb01Search = view.findViewById(R.id.rb01Search);
         rb02Search = view.findViewById(R.id.rb02Search);
 
-        btSearch.setOnClickListener( op -> search());
+        btSearch.setOnClickListener(op -> search());
 
         return view;
     }
 
     private void search() {
-        if (!etDateSC.getText().toString().isEmpty()){
-            if (rb01Search.isChecked()){
-                TAC = new TreinoAcademiaController(new TreinoAcademiaDAO(this.getContext()));
-                TreinoAcademia ta = new TreinoAcademia();
-                String teste = etDateSC.getText().toString();
-                ta.setId(TAC.createId(teste));
-                try {
-                    TreinoAcademia treino = TAC.search(ta);
-                    if(treino.getId() != 0){
-                        tvResSC.setText(treino.toString());
-                    }else{
-                        Toast.makeText(view.getContext(), "Treino Não Encontrado", Toast.LENGTH_SHORT).show();
-                    }
-                } catch (SQLException e) {
-                    Toast.makeText(view.getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            } else if (rb02Search.isChecked()) {
-                TCC = new TreinoCasaController(new TreinoCasaDAO(this.getContext()));
-                TreinoCasa tc = new TreinoCasa();
-                tc.setId(TCC.createId(etDateSC.getText().toString()));
-                try {
-                    TreinoCasa treino = TCC.search(tc);
-                    if(treino.getId() != 0){
-                        tvResSC.setText(treino.toString());
-                    }else{
-                        Toast.makeText(view.getContext(), "Treino Não Encontrado", Toast.LENGTH_SHORT).show();
-                    }
-                } catch (SQLException e) {
-                    Toast.makeText(view.getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            }else{
-                Toast.makeText(view.getContext(), "Selecione o tipo de Treino", Toast.LENGTH_SHORT).show();
-            }
-        }else{
-            Toast.makeText(view.getContext(), "Insira a data do treino", Toast.LENGTH_SHORT).show();
+        if (etDateSC.getText().toString().isEmpty()) {
+            Toast.makeText(view.getContext(), "Insira a data do treino.", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        String url = "";
+        if (rb01Search.isChecked()) {
+            url = "https://seu-api-url/gym/";
+        } else if (rb02Search.isChecked()) {
+            url = "https://seu-api-url/home/";
+        } else {
+            Toast.makeText(view.getContext(), "Selecione o tipo de treino.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        url += etDateSC.getText().toString();
+
+        String finalUrl = url;
+        CompletableFuture.runAsync(() -> {
+            try {
+                String response = HttpHelper.get(finalUrl);
+                JSONObject treino = new JSONObject(response);
+
+                requireActivity().runOnUiThread(() ->
+                        tvResSC.setText(treino.toString())
+                );
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(view.getContext(), "Erro: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+            }
+        });
     }
+
 }

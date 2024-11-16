@@ -1,5 +1,7 @@
 package br.edu.fateczl.trabalho_mobile_treinamentofisico;
 
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.http.HttpHelper;
+
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -12,15 +14,12 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.sql.SQLException;
-import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
-import controller.TreinoAcademiaController;
-import controller.TreinoCasaController;
-import model.TreinoAcademia;
-import model.TreinoCasa;
-import persistance.TreinoAcademiaDAO;
-import persistance.TreinoCasaDAO;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+
 
 public class ListFragment extends Fragment {
 
@@ -29,8 +28,6 @@ public class ListFragment extends Fragment {
     private TextView tvResList;
     private RadioButton rbList01;
     private RadioButton rbList02;
-    private TreinoAcademiaController TAC;
-    private TreinoCasaController TCC;
 
     public ListFragment() {
         super();
@@ -39,7 +36,6 @@ public class ListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         view = inflater.inflate(R.layout.fragment_list, container, false);
 
         btList = view.findViewById(R.id.btList);
@@ -53,41 +49,42 @@ public class ListFragment extends Fragment {
     }
 
     private void search() {
-        StringBuffer buffer = new StringBuffer();
+        String url = "";
+
         if (rbList01.isChecked()) {
-            TAC = new TreinoAcademiaController(new TreinoAcademiaDAO(this.getContext()));
-            try {
-                List<TreinoAcademia> treinos = TAC.list();
-                if (!treinos.isEmpty()) {
-                    for (TreinoAcademia t : treinos) {
-                        buffer.append(t.toString());
-                        buffer.append("\n");
-                    }
-                    tvResList.setText(buffer.toString());
-                } else {
-                    Toast.makeText(view.getContext(), "Não há Treinos Cadastrados.", Toast.LENGTH_SHORT).show();
-                }
-            } catch (SQLException e) {
-                Toast.makeText(view.getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
+            url = "https://seu-api-url/gym";
         } else if (rbList02.isChecked()) {
-            TCC = new TreinoCasaController(new TreinoCasaDAO(this.getContext()));
-            try {
-                List<TreinoCasa> treinos = TCC.list();
-                if(!treinos.isEmpty()){
-                    for (TreinoCasa t:treinos) {
-                        buffer.append(t.toString());
-                        buffer.append("\n");
-                    }
-                    tvResList.setText(buffer.toString());
-                }else{
-                    Toast.makeText(view.getContext(), "Não há Treinos Cadastrados.", Toast.LENGTH_SHORT).show();
-                }
-            } catch (SQLException e) {
-                Toast.makeText(view.getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
+            url = "https://seu-api-url/home";
         } else {
             Toast.makeText(view.getContext(), "Selecione o tipo de treino.", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        String finalUrl = url;
+        CompletableFuture.runAsync(() -> {
+            try {
+                String response = HttpHelper.get(finalUrl);
+                JSONArray jsonArray = new JSONArray(response);
+                StringBuilder buffer = new StringBuilder();
+
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject treino = jsonArray.getJSONObject(i);
+                    buffer.append(treino.toString()).append("\n");
+                }
+
+                requireActivity().runOnUiThread(() -> {
+                    if (buffer.length() > 0) {
+                        tvResList.setText(buffer.toString());
+                    } else {
+                        Toast.makeText(view.getContext(), "Nenhum treino encontrado.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(view.getContext(), "Erro: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+            }
+        });
     }
+
 }

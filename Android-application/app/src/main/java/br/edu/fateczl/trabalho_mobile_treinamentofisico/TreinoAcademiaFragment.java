@@ -1,9 +1,7 @@
 package br.edu.fateczl.trabalho_mobile_treinamentofisico;
 
 import android.os.Bundle;
-
 import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,26 +9,20 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.sql.SQLException;
+import java.io.IOException;
+import java.time.LocalDate;
 
-import controller.TreinoAcademiaController;
+import okhttp3.*;
+
 import model.TreinoAcademia;
-import persistance.TreinoAcademiaDAO;
+
 
 public class TreinoAcademiaFragment extends Fragment {
 
     private View view;
-    private EditText etDateTA;
-    private EditText etMuscTA;
-    private EditText etLocalTA;
-    private EditText etExTA;
-    private Button btRegTA;
-    private Button btUpTA;
-    private TreinoAcademiaController TAC;
-
-    public TreinoAcademiaFragment() {
-        super();
-    }
+    private EditText etDateTA, etMuscTA, etLocalTA, etExTA;
+    private Button btRegTA, btUpTA;
+    private static final String BASE_URL = "http://192.168.1.7:8080/api/gym/";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -44,55 +36,88 @@ public class TreinoAcademiaFragment extends Fragment {
         btRegTA = view.findViewById(R.id.btRegTA);
         btUpTA = view.findViewById(R.id.btUpTA);
 
-        TAC = new TreinoAcademiaController(new TreinoAcademiaDAO(this.getContext()));
-        btRegTA.setOnClickListener( op -> register());
-        btUpTA.setOnClickListener( op -> update());
+        btRegTA.setOnClickListener(op -> register());
+        btUpTA.setOnClickListener(op -> update());
 
         return view;
     }
 
-
-    private void update() {
-        boolean teste = testCampos();
-        if(teste){
+    private void register() {
+        if (validateFields()) {
             TreinoAcademia ta = create();
-            try{
-                TAC.update(ta);
-                Toast.makeText(view.getContext(), "Treino atualizado com sucesso", Toast.LENGTH_LONG).show();
-            }catch (SQLException e){
-                Toast.makeText(view.getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-            }
-            clearFields();
-        }else{
-            Toast.makeText(view.getContext(), "Preencha todos os campos antes de continuar.", Toast.LENGTH_SHORT).show();
+            sendRequest("POST", ta, false);
+        } else {
+            Toast.makeText(view.getContext(), "Preencha todos os campos.", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void register() {
-        boolean teste = testCampos();
-        if(teste){
+    private void update() {
+        if (validateFields()) {
             TreinoAcademia ta = create();
-            try{
-                TAC.insert(ta);
-                Toast.makeText(view.getContext(), "Treino salvo com sucesso", Toast.LENGTH_LONG).show();
-            }catch (SQLException e){
-                Toast.makeText(view.getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-            }
-            clearFields();
-        }else{
-            Toast.makeText(view.getContext(), "Preencha todos os campos antes de continuar.", Toast.LENGTH_SHORT).show();
+            sendRequest("PUT", ta, true);
+        } else {
+            Toast.makeText(view.getContext(), "Preencha todos os campos.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void sendRequest(String method, TreinoAcademia treino, boolean isUpdate) {
+        OkHttpClient client = new OkHttpClient();
+
+        MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
+        String jsonBody = treinoToJson(treino);
+
+        RequestBody body = RequestBody.create(mediaType, jsonBody);
+        Request request;
+        if (method.equals("POST")) {
+            request = new Request.Builder()
+                    .url(BASE_URL)
+                    .post(body)
+                    .build();
+        } else { // PUT
+            request = new Request.Builder()
+                    .url(BASE_URL + treino.getId()) // Assumindo que o ID é necessário no URL para PUT
+                    .put(body)
+                    .build();
+        }
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                getActivity().runOnUiThread(() ->
+                        Toast.makeText(view.getContext(), "Erro na requisição: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                );
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                getActivity().runOnUiThread(() -> {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(view.getContext(),
+                                method.equals("POST") ? "Treino salvo com sucesso." : "Treino atualizado com sucesso.",
+                                Toast.LENGTH_LONG
+                        ).show();
+                        clearFields();
+                    } else {
+                        Toast.makeText(view.getContext(), "Erro: " + response.message(), Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        });
+    }
+
+    private String treinoToJson(TreinoAcademia treino) {
+        return String.format("{\"date\":\"%s\",\"muscularGroup\":\"%s\",\"exercises\":\"%s\",\"academia\":\"%s\"}",
+                treino.getDate(), treino.getMuscularGroup(), treino.getExercises(), treino.getAcademia());
     }
 
     private TreinoAcademia create() {
         TreinoAcademia ta = new TreinoAcademia();
-
-        ta.setId(TAC.createId(etDateTA.getText().toString()));
-        ta.setDate(TAC.createDate(etDateTA.getText().toString()));
+        // Simulating ID generation if needed (or use UUID/random value).
+        ta.setId((int) (Math.random() * 1000));
+        ta.setDate(LocalDate.parse(etDateTA.getText().toString()));
         ta.setMuscularGroup(etMuscTA.getText().toString());
         ta.setExercises(etExTA.getText().toString());
         ta.setAcademia(etLocalTA.getText().toString());
-
         return ta;
     }
 
@@ -103,12 +128,10 @@ public class TreinoAcademiaFragment extends Fragment {
         etExTA.setText("");
     }
 
-    private Boolean testCampos() {
-        boolean teste = etDateTA.getText().toString().isEmpty() ||
-                etMuscTA.getText().toString().isEmpty() ||
-                etLocalTA.getText().toString().isEmpty() ||
-                etExTA.getText().toString().isEmpty();
-
-        return !teste;
+    private boolean validateFields() {
+        return !etDateTA.getText().toString().isEmpty() &&
+                !etMuscTA.getText().toString().isEmpty() &&
+                !etLocalTA.getText().toString().isEmpty() &&
+                !etExTA.getText().toString().isEmpty();
     }
 }
