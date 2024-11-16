@@ -1,5 +1,6 @@
 package fatec.phc.api.trainingschedule.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,8 +23,8 @@ public class TrainingServiceImp implements ITrainingService{
 	}
 
 	@Override
-	public Training findTraining(Long idTraining) {
-		Optional<Training> trainingExists = repository.findById(idTraining);
+	public Training findTraining(LocalDate dateTraining) {
+		Optional<Training> trainingExists = Optional.of(repository.findByDate(dateTraining));
 		if(trainingExists.isEmpty()){
 			throw new NullPointerException("Training is not Exists in DataBase");
 		}
@@ -31,14 +32,14 @@ public class TrainingServiceImp implements ITrainingService{
 	}
 
 	@Override
-	public Training updateTraining(Long idTraining, Training newTraining) {
-		Optional<Training> oldTraining = repository.findById(idTraining);
+	public Training updateTraining(LocalDate dateTraining, Training newTraining) {
+		Optional<Training> oldTraining = Optional.of(repository.findByDate(dateTraining));
 		if(oldTraining.isEmpty()){
 			throw new NullPointerException("Training is not Exists in DataBase");
 		}
 		Training updateTraining = oldTraining.get();
 		
-		updateTraining.setType(newTraining.getType());			
+		updateTraining.setType(newTraining.getType());
 		updateTraining.setDate(newTraining.getDate());
 		updateTraining.setMuscularGroup(newTraining.getMuscularGroup());
 		updateTraining.setExercises(newTraining.getExercises());
@@ -49,8 +50,8 @@ public class TrainingServiceImp implements ITrainingService{
 	}
 
 	@Override
-	public Training deleteTraining(Long idTraining) {
-		Optional<Training> trainingExists = repository.findById(idTraining);
+	public Training deleteTraining(LocalDate dateTraining) {
+		Optional<Training> trainingExists = Optional.of(repository.findByDate(dateTraining));
 		if(trainingExists.isEmpty()){
 			throw new NullPointerException("Training is not Exists in DataBase");
 		}

@@ -1,5 +1,7 @@
 package fatec.phc.api.trainingschedule.controller;
 
+import java.time.LocalDate;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +24,10 @@ public class TrainingController {
 	@Autowired
 	ITrainingService service;
 	
-	@GetMapping("/{id}")
-	public ResponseEntity<Training> getTraining(@PathVariable Long id){
-		Training training = service.findTraining(id);
+	@GetMapping("/{dateTraining}")//date
+	public ResponseEntity<Training> getTraining(@PathVariable LocalDate dateTraining){
+		Training training = service.findTraining(dateTraining);
+		
 		return ResponseEntity.status(HttpStatus.OK).body(training);
 	}
 	
@@ -34,15 +37,15 @@ public class TrainingController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(training);
 	}
 	
-	@PutMapping("/{id}")
-	public ResponseEntity<Training> updateTraining(@PathVariable Long id, @RequestBody Training trainingJSON){
-		Training updatedTraining = service.updateTraining(id, trainingJSON);
+	@PutMapping("/{dateTraining}")//date
+	public ResponseEntity<Training> updateTraining(@PathVariable LocalDate dateTraining, @RequestBody Training trainingJSON){
+		Training updatedTraining = service.updateTraining(dateTraining, trainingJSON);
 		return ResponseEntity.status(HttpStatus.OK).body(updatedTraining);
 	}
 	
-	@DeleteMapping("/{id}")
-	public ResponseEntity<Training> deleteTraining(@PathVariable Long id){
-		Training training = service.deleteTraining(id);
+	@DeleteMapping("/{dateTraining}")//date
+	public ResponseEntity<Training> deleteTraining(@PathVariable LocalDate dateTraining){
+		Training training = service.deleteTraining(dateTraining);
 		return ResponseEntity.status(HttpStatus.OK).body(training);
 	}
 	
