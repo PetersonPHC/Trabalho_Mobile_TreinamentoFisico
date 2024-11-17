@@ -15,6 +15,12 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.fragments.DeleteFragment;
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.fragments.ListFragment;
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.fragments.SearchFragment;
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.fragments.TreinoAcademiaFragment;
+import br.edu.fateczl.trabalho_mobile_treinamentofisico.fragments.TreinoCasaFragment;
+
 public class MainActivity extends AppCompatActivity {
 
     private Fragment fragment;

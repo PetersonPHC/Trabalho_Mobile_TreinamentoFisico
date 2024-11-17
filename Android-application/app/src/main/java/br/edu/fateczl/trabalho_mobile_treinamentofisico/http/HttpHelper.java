@@ -9,8 +9,8 @@ import okhttp3.*;
 
 public class HttpHelper {
 
-    private static OkHttpClient client = null;
-    private static String baseUrl = "";
+    private static OkHttpClient client;
+    private static String baseUrl;
 
     public HttpHelper(String baseUrl) {
         this.client = new OkHttpClient();

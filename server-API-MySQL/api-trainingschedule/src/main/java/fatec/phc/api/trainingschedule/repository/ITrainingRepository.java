@@ -1,5 +1,6 @@
 package fatec.phc.api.trainingschedule.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,4 +12,5 @@ public interface ITrainingRepository extends JpaRepository<Training, Long>{
 	List<Training> findByType(String type);
 	@Procedure(procedureName = "dataReportingStoredProcedure")
 	List<Training> fetchAllTrainings();
+	Training findByDate(LocalDate date);
 }

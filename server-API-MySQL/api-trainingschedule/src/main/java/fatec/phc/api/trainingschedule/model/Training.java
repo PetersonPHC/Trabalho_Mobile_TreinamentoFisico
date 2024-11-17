@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import javax.validation.constraints.NotBlank;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,9 +22,12 @@ public class Training {
 	@NotBlank
 	private String type;
 	@NotNull
+	@Column(unique = true)
 	private LocalDate date;
 	@NotBlank
 	private String muscularGroup;
+	@NotBlank
+	private String exercises;
 	
 	private int duration;
 	
@@ -66,6 +70,15 @@ public class Training {
 
 	public void setMuscularGroup(String muscularGroup) {
 		this.muscularGroup = muscularGroup;
+	}
+
+	public String getExercises() {
+		return exercises;
+	}
+	
+	
+	public void setExercises(String exercises) {
+		this.exercises = exercises;
 	}
 
 

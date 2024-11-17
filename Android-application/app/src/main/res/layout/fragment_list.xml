@@ -5,7 +5,7 @@
     android:id="@+id/frameLayout4"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ListFragment">
+    tools:context=".fragments.ListFragment">
 
     <Button
         android:id="@+id/btList"
@@ -17,21 +17,27 @@
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.916" />
+        app:layout_constraintVertical_bias="0.948" />
 
     <TextView
         android:id="@+id/tvResList"
-        android:layout_width="412dp"
-        android:layout_height="427dp"
+        android:layout_width="370dp"
+        android:layout_height="320dp"
+        android:textColor="#FDFDFD"
+        android:scrollbars="vertical"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:importantForAccessibility="no"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.476"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.195" />
-
+        app:layout_constraintVertical_bias="0.05" />
     <RadioGroup
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:id="@+id/radioGroup"
+        android:layout_width="315dp"
+        android:layout_height="184dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
@@ -40,15 +46,24 @@
         app:layout_constraintVertical_bias="0.801">
 
         <RadioButton
-            android:id="@+id/rb01List"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/TA" />
+            android:id="@+id/rb02List"
+            android:layout_width="293dp"
+            android:layout_height="53dp"
+            android:text="@string/TC" />
 
         <RadioButton
-            android:id="@+id/rb02List"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/TC" />
+            android:id="@+id/rb01List"
+            android:layout_width="293dp"
+            android:layout_height="53dp"
+            android:text="@string/Todos" />
+
+        <RadioButton
+            android:id="@+id/rb03List"
+            android:layout_width="293dp"
+            android:layout_height="53dp"
+            android:text="@string/TA" />
+
+
     </RadioGroup>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
